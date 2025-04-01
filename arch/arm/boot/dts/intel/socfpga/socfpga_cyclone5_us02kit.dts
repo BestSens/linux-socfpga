@@ -1,0 +1,214 @@
+/*
+ * Copyright Altera Corporation (C) 2015. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "socfpga_cyclone5.dtsi"
+
+/ {
+	soc {
+		emmc: dwmmc0@ff704000 {
+			compatible = "altr,socfpga-dw-mshc";
+			reg = <0xff704000 0x1000>;
+			interrupts = <0 139 4>;
+			fifo-depth = <0x400>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&l4_mp_clk>, <&sdmmc_clk_divided>;
+			clock-names = "biu", "ciu";
+			resets = <&rst SDMMC_RESET>;
+			altr,sysmgr-syscon = <&sysmgr 0x108 3>;
+			
+			num-slots = <1>;
+			supports-highspeed;
+			broken-cd;
+			altr,dw-mshc-ciu-div = <3>;
+			altr,dw-mshc-sdr-timing = <0 3>;
+
+			slot@0 {
+				cd-gpios = <&gpio1 18 0>;
+				reg = <0>;
+				bus-width = <4>;
+			};
+		};
+	};
+};
+
+/ {
+	model = "Altera SOCFPGA Cyclone V";
+	compatible = "altr,socfpga-cyclone5", "altr,socfpga";
+
+	chosen {
+		bootargs = "console=ttyS0,115200";
+	};
+
+	memory {
+		name = "memory";
+		device_type = "memory";
+		reg = <0x0 0x40000000>; /* 1GB */
+	};
+
+	aliases {
+		ethernet0 = &gmac0;
+		ethernet1 = &gmac1;
+		mmc0 = &emmc;
+		mmc1 = &ulti_sdc_0;
+		serial0 = &uart0;
+		serial1 = &uart1;
+	};
+
+	regulator_3_3v: 3-3-v-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "3.3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+
+	ulti_sdc_0: ulti_sdc@ff230000 {
+		compatible = "EXOR,ulti_sdc-13.1", "EXOR,ulti_sdc-1.0", "exor,ulti_sdc-1.0", "sdhci-ultimmc";
+		reg = < 0xFF230000 0x0000ffff >;
+		interrupt-parent = <&intc>;
+		interrupts = < 0 43 4 >;
+	};
+
+	ethernet@ff700000 {
+		phy-mode = "mii";
+		phy-addr = <0x00>;
+		status = "okay";
+	};
+		
+	agpio0: gpio@0xff210010 {
+		compatible = "altr,pio-1.0";
+		reg = <0xff210010 0x10>;
+		interrupts = <0 44 4>;
+		width=<32>;
+		altr,interrupt_type = < 4 >;
+		#gpio-cells = <2>;
+		gpio-controller;
+		#interrupt-cells = <1>;
+		interrupt-controller;
+	};
+};
+
+&i2c0 {
+	status = "okay";
+	speed-mode = <0>;
+	i2c-sda-falling-time-ns = <10000>;
+	i2c-scl-falling-time-ns = <10000>;
+	
+	temp@48 {
+		compatible = "national,tmp75";
+		reg = <0x4C>;
+	};
+	
+	eeprom@51 {
+		compatible = "atmel,24c04";
+		reg = <0x51>;
+		pagesize = <16>;
+	};
+
+	m41t83@68 {
+		compatible = "stm,m41t83";
+		reg = <0x68>;
+	};
+};
+
+&spi0 {
+	status = "okay";
+	num-cs = <4>;
+	bus-num = <0>;
+	cs-gpios = <&agpio0 3 0>, <&agpio0 4 0>, <&agpio0 5 0>, <&agpio0 6 0>;
+
+	fram: at25@2 {
+		compatible = "atmel,at25", "st,m95256";
+		reg = <2>;
+		spi-max-frequency = <20000000>;
+		pagesize = <64>;
+		size = <65536>;
+		address-width = <16>;
+	};
+};
+
+&gmac0 {
+	phy-mode = "mii";
+	snps,phy-addr = <0x00>;
+	status = "okay";
+};
+
+&gmac1 {
+	status = "disabled";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&gpio2 {
+	status = "okay";
+};
+
+&qspi {
+	status = "okay";
+	flash0: n25q256a@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "n25q256a";
+		reg = <0>;      /* chip select */
+		spi-max-frequency = <100000000>;
+		m25p,fast-read;
+		page-size = <256>; 
+		block-size = <16>; /* 2^16, 64KB */
+		read-delay = <4>;  /* delay value in read data capture register */
+		cdns,tshsl-ns = <50>;
+		cdns,tsd2d-ns = <50>;
+		cdns,tchsh-ns = <4>;
+		cdns,tslch-ns = <4>;
+
+		partition@qspi-fpga1 {
+		/* 10MB for raw FPGA1 image. */
+		label = "fpga1";
+		reg = <0x0 0xa00000>;
+		};
+
+		partition@qspi-fpga2 {
+		/* 10MB for raw FPGA2 image. */
+		label = "fpga2";
+		reg = <0xa00000 0xa00000>;
+		};
+	};
+};
+
+&uart0 {
+	status = "okay";
+	rts-gpio = <&porta 22 0>;
+	mode-gpio = <&porta 24 0>;
+	rxen-gpio = <&portb 23 0>;
+	rs485-rts-active-high;
+};
+
+&usb1 {
+	status = "okay";
+};
+
+&can0 {
+  status = "okay";
+};
+
+&can1 {
+  status = "okay";
+};
