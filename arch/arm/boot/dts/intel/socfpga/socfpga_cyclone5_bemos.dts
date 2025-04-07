@@ -1,3 +1,4 @@
+#include <dt-bindings/gpio/gpio.h>
 #include "socfpga_cyclone5_us02kit.dts"
 
 / {
@@ -56,6 +57,8 @@
 
 			i2c-external = <&i2c_external>;
 			i2c-ab = <&i2c_ab>;
+			
+			vdd-supply = <&viso_regulator>;
 
 			io-channels = <&dac_level>,
 						  <&tm_tx>,
@@ -79,6 +82,77 @@
 						 <0 56 4>, /* ae_dtc */
 						 <0 57 4>, /* trigger_in */
 						 <0 44 4>; /* ab_pio */
+		};
+		
+		gpio_viso_misc: gpio@ff2101c0 {
+			compatible = "altr,pio-1.0";
+			reg = <0xff2101c0 0x10>;
+			status = "okay";
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			
+			altr,ngpio = <3>;
+			gpio-line-names = "viso_status", "viso_enable", "viso_autoreset_enable";
+		};
+	
+		/* gpio_version: gpio@ff201000 {
+			compatible = "altr,pio-1.0";
+			reg = <0xff201000 0x10>;
+			status = "okay";
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			
+			altr,ngpio = <32>;
+		}; */
+			
+		/* gpio_feature_set: gpio@ff201010 {
+			compatible = "altr,pio-1.0";
+			reg = <0xff201010 0x10>;
+			status = "okay";
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			
+			altr,ngpio = <32>;
+		}; */
+		
+		gpio_misc: gpio@ff201020 {
+			compatible = "altr,pio-1.0";
+			reg = <0xff201020 0x10>;
+			status = "okay";
+
+			gpio-controller;
+			#gpio-cells = <2>;
+
+			altr,ngpio = <4>;
+			gpio-line-names = "hard_reset", "iepe_pwr", "qspi_access", "eth_rst";
+		};
+
+		/* gpio_build_date: gpio@ff201040 {
+			compatible = "altr,pio-1.0";
+			reg = <0xff201040 0x10>;
+			status = "okay";
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			
+			altr,ngpio = <32>;
+		}; */
+		
+		viso_regulator: gpio-regulator {
+			compatible = "regulator-fixed";
+			regulator-name = "viso";
+			
+			regulator-min-microvolt = <24000000>;
+			regulator-max-microvolt = <24000000>;
+			startup-delay-us = <100000>;
+			
+			gpio = <&gpio_viso_misc 1 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
+			
+			/* regulator-always-on; */
 		};
 		
 		i2c_ab: i2c@ff2c0040 {
@@ -109,6 +183,7 @@
 				compatible = "microchip,mcp3427";
 				reg = <0x68>;
 				#io-channel-cells = <1>;
+				vref-supply = <&viso_regulator>;
 			};
 		};
 		
