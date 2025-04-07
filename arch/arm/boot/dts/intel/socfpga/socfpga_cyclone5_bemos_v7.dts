@@ -1,0 +1,7 @@
+#include "socfpga_cyclone5_bemos.dts"
+
+&analogboard_0 {
+	io-channels = <&dac_level>;
+	io-channel-names = "level";
+};
+

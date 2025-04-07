@@ -16,4 +16,6 @@ dtb-$(CONFIG_ARCH_INTEL_SOCFPGA) += \
 	socfpga_cyclone5_vining_fpga.dtb \
 	socfpga_cyclone5_us02kit.dtb \
 	socfpga_cyclone5_bemos.dtb \
+	socfpga_cyclone5_bemos_noviso.dtb \
+	socfpga_cyclone5_bemos_v7.dtb \
 	socfpga_vt.dtb

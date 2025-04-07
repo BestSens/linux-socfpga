@@ -1,0 +1,6 @@
+#include "socfpga_cyclone5_bemos.dts"
+
+&viso_regulator {
+	/delete-property/ regulator-always-on;
+};
+

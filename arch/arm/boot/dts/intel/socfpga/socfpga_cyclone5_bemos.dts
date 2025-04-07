@@ -62,15 +62,11 @@
 
 			io-channels = <&dac_level>,
 						  <&tm_tx>,
-						  <&tm_rx>,
-						  <&ab_ai 0>,
-						  <&ab_ai 1>;
+						  <&tm_rx>;
 
 			io-channel-names = "level",
 							   "tm_tx",
-							   "tm_rx",
-							   "ai0",
-							   "ai1";
+							   "tm_rx";
 			
 			interrupt-parent = <&intc>;			
 			interrupts = <0 41 4>, /* connected */
@@ -141,7 +137,7 @@
 			altr,ngpio = <32>;
 		}; */
 		
-		viso_regulator: gpio-regulator {
+		viso_regulator: regulator@0 {
 			compatible = "regulator-fixed";
 			regulator-name = "viso";
 			
@@ -152,7 +148,7 @@
 			gpio = <&gpio_viso_misc 1 GPIO_ACTIVE_HIGH>;
 			enable-active-high;
 			
-			/* regulator-always-on; */
+			regulator-always-on;
 		};
 		
 		i2c_ab: i2c@ff2c0040 {
